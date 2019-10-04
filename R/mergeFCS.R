@@ -2,13 +2,13 @@ normalize_flowFrames<-function(ff = list(), channels=c(1,2,3,7,10,11), verbose =
   ff2<-ff
   for (marker in channels){
     row_max<-max(sapply(ff, nrow))
-    col_mat<-matrix(data=NA_integer_, nrow=row_max, ncol=length(ff))
+    col_mat<-matrix(data=NA_real_, nrow=row_max, ncol=length(ff))
     for (frame in 1:length(ff)) {
-      col_mat[,frame]<-c(ff[[frame]]@exprs[,marker], rep(NA_integer_, (row_max-nrow(ff[[frame]]))))
+      col_mat[,frame]<-c(ff[[frame]]@exprs[,marker], rep(NA_real_, (row_max-nrow(ff[[frame]]))))
     }
     #norm_col_mat<-limma::normalizeQuantiles(col_mat)
     norm_col_mat<-preprocessCore::normalize.quantiles(col_mat)
-    mode(norm_col_mat)<-"integer"
+    #mode(norm_col_mat)<-"integer"
     for (frame in 1:length(ff)) {
       ff2[[frame]]@exprs[,marker]<-norm_col_mat[!is.na(norm_col_mat[,frame]),frame]
     }
@@ -102,7 +102,7 @@ merge_FCS<-function(files = c(), common=c(1,2,3,7,10,11), variable=c(4,5,6,8,9),
   for (col in 1:length(common)){
     val_comum<-c()
     for (i in 1:num_frames) {
-      val_comum<-c(val_comum, as.integer(exprs(unmerged[[i]])[,common[col]]))
+      val_comum<-c(val_comum, exprs(unmerged[[i]])[,common[col]])
     }
     matriz[,col]<-val_comum
   }
@@ -119,7 +119,7 @@ merge_FCS<-function(files = c(), common=c(1,2,3,7,10,11), variable=c(4,5,6,8,9),
       #prev<-FNN::knn.reg(exprs(unmerged[[frame]])[,common], matriz[,1:length(common)], exprs(unmerged[[frame]])[,variable[col]], 1)
       #pred<-prev$pred
       pred<-exprs(unmerged[[frame]])[,variable[col]][Z$nn.index]
-      matriz[,coluna2+col]<-as.integer(pred)
+      matriz[,coluna2+col]<-pred
       if (verbose) cat("\rProcessed column number:", (coluna2+col), "/", (numero_cols-1))
     }
     coluna2<-coluna2+length(variable)
@@ -131,9 +131,9 @@ merge_FCS<-function(files = c(), common=c(1,2,3,7,10,11), variable=c(4,5,6,8,9),
   if (verbose) cat("\n\n\033[33;1mSubstituting values of real variable parameters...")
   for (frame in 1:num_frames) {
     for (col in 1:length(variable)){
-      matriz[(indice+1):(indice+nrow(unmerged[[frame]])),coluna+col]<-as.integer(exprs(unmerged[[frame]])[,variable[col]])
+      matriz[(indice+1):(indice+nrow(unmerged[[frame]])),coluna+col]<-exprs(unmerged[[frame]])[,variable[col]]
     }
-    matriz[(indice+1):(indice+nrow(unmerged[[frame]])),numero_cols]<-as.integer(frame)
+    matriz[(indice+1):(indice+nrow(unmerged[[frame]])),numero_cols]<-frame
     indice<-indice+nrow(unmerged[[frame]])
     coluna<-coluna+length(variable)
   }
