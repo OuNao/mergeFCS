@@ -60,9 +60,9 @@ merge_FCS<-function(files = c(), common=c(1,2,3,7,10,11), variable=c(4,5,6,8,9),
   for (i in 1:num_frames) numero_linhas<-numero_linhas+nrow(ff[[i]])
   nomes_linhas<-NULL
   nomes_colunas<-c()
-  for (i in 1:length(common)) nomes_colunas<-c(nomes_colunas, gsub("NA ","",paste(parameters(unmerged[[num_frames]])@data$desc[common[i]],parameters(unmerged[[num_frames]])@data$name[common[i]])))
+  for (i in 1:length(common)) nomes_colunas<-c(nomes_colunas, gsub("NA ","",paste(flowCore::parameters(unmerged[[num_frames]])@data$desc[common[i]],flowCore::parameters(unmerged[[num_frames]])@data$name[common[i]])))
   for (frame in 1:num_frames) {
-    for (i in 1:length(variable)) nomes_colunas<-c(nomes_colunas, gsub("NA ","",paste(parameters(unmerged[[frame]])@data$desc[variable[i]],parameters(unmerged[[frame]])@data$name[variable[i]])))
+    for (i in 1:length(variable)) nomes_colunas<-c(nomes_colunas, gsub("NA ","",paste(flowCore::parameters(unmerged[[frame]])@data$desc[variable[i]],flowCore::parameters(unmerged[[frame]])@data$name[variable[i]])))
   }
   nomes_colunas[numero_cols]<-"tube"
   nomes<-list(NULL,nomes_colunas)

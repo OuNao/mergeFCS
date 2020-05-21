@@ -4,8 +4,13 @@
 \alias{merge_FCS}
 \title{A function to merge flow cytometry data files (.FCS).}
 \usage{
-merge_FCS(files = c(), common = c(1, 2, 3, 7, 10, 11),
-  variable = c(4, 5, 6, 8, 9), normalize = TRUE, verbose = TRUE)
+merge_FCS(
+  files = c(),
+  common = c(1, 2, 3, 7, 10, 11),
+  variable = c(4, 5, 6, 8, 9),
+  normalize = TRUE,
+  verbose = TRUE
+)
 }
 \arguments{
 \item{files}{Vector of file names of the .FCS files to merge}
