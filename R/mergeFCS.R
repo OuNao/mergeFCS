@@ -102,7 +102,7 @@ merge_FCS<-function(files = c(), common=c(1,2,3,7,10,11), variable=c(4,5,6,8,9),
   for (col in 1:length(common)){
     val_comum<-c()
     for (i in 1:num_frames) {
-      val_comum<-c(val_comum, exprs(unmerged[[i]])[,common[col]])
+      val_comum<-c(val_comum, flowCore::exprs(unmerged[[i]])[,common[col]])
     }
     matriz[,col]<-val_comum
   }
@@ -114,11 +114,11 @@ merge_FCS<-function(files = c(), common=c(1,2,3,7,10,11), variable=c(4,5,6,8,9),
   coluna2<-coluna
   if (verbose) cat("\nProcessed column number:", coluna2, "/", (numero_cols-1))
   for (frame in 1:num_frames) {
-    Z<-FNN::get.knnx(exprs(unmerged[[frame]])[,common], matriz[,1:length(common)], 1)
+    Z<-FNN::get.knnx(flowCore::exprs(unmerged[[frame]])[,common], matriz[,1:length(common)], 1)
     for (col in 1:length(variable)){
-      #prev<-FNN::knn.reg(exprs(unmerged[[frame]])[,common], matriz[,1:length(common)], exprs(unmerged[[frame]])[,variable[col]], 1)
+      #prev<-FNN::knn.reg(flowCore::exprs(unmerged[[frame]])[,common], matriz[,1:length(common)], flowCore::exprs(unmerged[[frame]])[,variable[col]], 1)
       #pred<-prev$pred
-      pred<-exprs(unmerged[[frame]])[,variable[col]][Z$nn.index]
+      pred<-flowCore::exprs(unmerged[[frame]])[,variable[col]][Z$nn.index]
       matriz[,coluna2+col]<-pred
       if (verbose) cat("\rProcessed column number:", (coluna2+col), "/", (numero_cols-1))
     }
@@ -131,7 +131,7 @@ merge_FCS<-function(files = c(), common=c(1,2,3,7,10,11), variable=c(4,5,6,8,9),
   if (verbose) cat("\n\n\033[33;1mSubstituting values of real variable parameters...")
   for (frame in 1:num_frames) {
     for (col in 1:length(variable)){
-      matriz[(indice+1):(indice+nrow(unmerged[[frame]])),coluna+col]<-exprs(unmerged[[frame]])[,variable[col]]
+      matriz[(indice+1):(indice+nrow(unmerged[[frame]])),coluna+col]<-flowCore::exprs(unmerged[[frame]])[,variable[col]]
     }
     matriz[(indice+1):(indice+nrow(unmerged[[frame]])),numero_cols]<-frame
     indice<-indice+nrow(unmerged[[frame]])
@@ -157,7 +157,7 @@ merge_FCS<-function(files = c(), common=c(1,2,3,7,10,11), variable=c(4,5,6,8,9),
       keys[[paste0("$P",col,"R")]]<-num_frames
     }
   }
-  merged<-flowFrame(exprs = matriz, description = keys, parameters = Biobase::AnnotatedDataFrame(meta))
+  merged<-flowCore::flowFrame(exprs = matriz, description = keys, parameters = Biobase::AnnotatedDataFrame(meta))
 
   if (verbose) cat("\n\n\033[32;1mDone...")
   return(merged)
