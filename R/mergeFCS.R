@@ -23,11 +23,12 @@ normalize_flowFrames<-function(ff = list(), channels=c(1,2,3,7,10,11), verbose =
 #' @param common Vector of common columns number
 #' @param variable Vector of variable columns number
 #' @param normalize Quantile normalize the common parameters before imputation
+#' @param impute logical. Missing values must be imputed?
 #' @param verbose Verbosity
 #' @return Merged flowFrame
 #' @keywords FCS
 #' @export
-merge_FCS<-function(files = c(), common=c(1,2,3,7,10,11), variable=c(4,5,6,8,9), normalize = TRUE, verbose = TRUE) {
+merge_FCS<-function(files = c(), common=c(1,2,3,7,10,11), variable=c(4,5,6,8,9), normalize = TRUE, impute = TRUE, verbose = TRUE) {
 
   if (!(is.vector(files) && is.vector(common) && is.vector(variable) && is.character(files) && is.numeric(common) && is.numeric(variable))) stop("Wrong parameter types.")
 
@@ -109,23 +110,25 @@ merge_FCS<-function(files = c(), common=c(1,2,3,7,10,11), variable=c(4,5,6,8,9),
   coluna<-coluna+length(common)
 
   # impute all values of variable markers
-  if (verbose) cat("\n\n\033[33;1mImputing values of variable parameters...\033[0m")
-  a<-Sys.time()
-  coluna2<-coluna
-  if (verbose) cat("\nProcessed column number:", coluna2, "/", (numero_cols-1))
-  for (frame in 1:num_frames) {
-    Z<-FNN::get.knnx(flowCore::exprs(unmerged[[frame]])[,common], matriz[,1:length(common)], 1)
-    for (col in 1:length(variable)){
-      #prev<-FNN::knn.reg(flowCore::exprs(unmerged[[frame]])[,common], matriz[,1:length(common)], flowCore::exprs(unmerged[[frame]])[,variable[col]], 1)
-      #pred<-prev$pred
-      pred<-flowCore::exprs(unmerged[[frame]])[,variable[col]][Z$nn.index]
-      matriz[,coluna2+col]<-pred
-      if (verbose) cat("\rProcessed column number:", (coluna2+col), "/", (numero_cols-1))
+  if (impute) {
+    if (verbose) cat("\n\n\033[33;1mImputing values of variable parameters...\033[0m")
+    a<-Sys.time()
+    coluna2<-coluna
+    if (verbose) cat("\nProcessed column number:", coluna2, "/", (numero_cols-1))
+    for (frame in 1:num_frames) {
+      Z<-FNN::get.knnx(flowCore::exprs(unmerged[[frame]])[,common], matriz[,1:length(common)], 1)
+      for (col in 1:length(variable)){
+        #prev<-FNN::knn.reg(flowCore::exprs(unmerged[[frame]])[,common], matriz[,1:length(common)], flowCore::exprs(unmerged[[frame]])[,variable[col]], 1)
+        #pred<-prev$pred
+        pred<-flowCore::exprs(unmerged[[frame]])[,variable[col]][Z$nn.index]
+        matriz[,coluna2+col]<-pred
+        if (verbose) cat("\rProcessed column number:", (coluna2+col), "/", (numero_cols-1))
+      }
+      coluna2<-coluna2+length(variable)
     }
-    coluna2<-coluna2+length(variable)
+    time_impute<-Sys.time()-a
+    if (verbose) cat("\n\033[0mTotal time to impute values of variable parameters:\033[31m", time_impute, attributes(time_impute)$units)
   }
-  time_impute<-Sys.time()-a
-  if (verbose) cat("\n\033[0mTotal time to impute values of variable parameters:\033[31m", time_impute, attributes(time_impute)$units)
 
   # substitute imputed values with real when exist
   if (verbose) cat("\n\n\033[33;1mSubstituting values of real variable parameters...")
@@ -149,16 +152,18 @@ merge_FCS<-function(files = c(), common=c(1,2,3,7,10,11), variable=c(4,5,6,8,9),
     keys[[paste0("$P",col,"N")]]<-as.character(nomes_colunas[col])
     if (col %in% 1:length(common)) {
       keys[[paste0("$P",col,"R")]]<-unmerged[[num_frames]]@description[[paste0("$P",common[col],"R")]]
+      keys[[paste0("P",col,"DISPLAY")]]<-unmerged[[num_frames]]@description[[paste0("P",common[col],"DISPLAY")]]
     } else if (col<length(nomes_colunas)) {
       frame<-as.integer(((col-length(common)-1)/length(variable))+1)
       colunm<-(col-((frame-1)*length(variable)))-length(common)
       keys[[paste0("$P",col,"R")]]<-unmerged[[frame]]@description[[paste0("$P",variable[colunm],"R")]]
+      keys[[paste0("P",col,"DISPLAY")]]<-unmerged[[frame]]@description[[paste0("P",variable[colunm],"DISPLAY")]]
     } else {
       keys[[paste0("$P",col,"R")]]<-num_frames
+      keys[[paste0("P",col,"DISPLAY")]]<-"LIN"
     }
   }
-  merged<-flowCore::flowFrame(exprs = matriz, description = keys, parameters = Biobase::AnnotatedDataFrame(meta))
-
+  merged<-methods::new("flowFrame", exprs = matriz, parameters = Biobase::AnnotatedDataFrame(meta), description = keys)
   if (verbose) cat("\n\n\033[32;1mDone...")
   return(merged)
 }

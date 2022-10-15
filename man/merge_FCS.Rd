@@ -9,6 +9,7 @@ merge_FCS(
   common = c(1, 2, 3, 7, 10, 11),
   variable = c(4, 5, 6, 8, 9),
   normalize = TRUE,
+  impute = TRUE,
   verbose = TRUE
 )
 }
@@ -20,6 +21,8 @@ merge_FCS(
 \item{variable}{Vector of variable columns number}
 
 \item{normalize}{Quantile normalize the common parameters before imputation}
+
+\item{impute}{logical. Missing values must be imputed?}
 
 \item{verbose}{Verbosity}
 }
