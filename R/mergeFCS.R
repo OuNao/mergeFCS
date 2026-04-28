@@ -45,15 +45,26 @@ merge_FCS<-function(files = c(), common=c(1,2,3,7,10,11), variable=c(4,5,6,8,9),
   }
 
   # compensate
+  docomp<-T
   for (fil in 1:num_frames) {
-    ff[[fil]]<-flowCore::compensate(ff[[fil]], flowCore::keyword(ff[[fil]], "SPILL")$SPILL)
+    if (!any(sapply(flowCore::spillover(ff[[fil]]), is.matrix))) {
+      docomp<-F
+      break
+    }
   }
+  if (docomp) {
+    for (fil in 1:num_frames) {
+      spill<-flowCore::spillover(ff[[fil]])
+      comp<-spill[sapply(spill, is.matrix)][[1]]
+      ff[[fil]]<-flowCore::compensate(ff[[fil]], comp)
+    }
+  } else cat("Some file(s) with no usable spillover table! Using non-compensated data.")
 
   # normalize
   if (normalize) ff<-normalize_flowFrames(ff, channels = common, verbose = verbose)
-
-  # unmerged compensated flowSet
-  unmerged<-flowCore::flowSet(ff)
+  
+  # unmerged (un)compensated flowFrame set
+  unmerged<-ff
 
   # create merge matrix
   numero_cols<-length(common)+ num_frames*length(variable) + 1
